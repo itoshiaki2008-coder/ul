@@ -16,7 +16,7 @@
   --input:#0d1c2c;
 }
 *{box-sizing:border-box;}
-html,body{margin:0;padding:0;}
+html,body{margin:0;padding:0;height:100%;}
 body{
   background:linear-gradient(160deg,var(--bg1),var(--bg2) 60%,#0d1a2a);
   background-attachment:fixed;
@@ -95,26 +95,32 @@ table.results td.maker{color:#ffffff;font-weight:700;}
   position:fixed;left:0;top:0;width:100%;height:100%;z-index:9999;
   display:flex;align-items:center;justify-content:center;background:rgba(2,6,11,0.85);
 }
-.pw-card{background:linear-gradient(180deg,#07121a,#0d2130);border:1px solid rgba(255,255,255,0.04);padding:30px;border-radius:12px;width:320px;max-width:90%;text-align:center;color:var(--text);}
-.pw-card label{display:block;font-size:14px;color:var(--text);margin-bottom:10px;font-weight:700;}
-.pw-card input{width:100%;padding:10px;border-radius:8px;border:1px solid #22445a;background:#06202b;color:#fff;font-size:16px;text-align:center;}
-.pw-hint{margin-top:8px;font-size:12px;color:var(--textdim);} 
+.pw-card{background:linear-gradient(180deg,#07121a,#0d2130);border:1px solid rgba(255,255,255,0.04);padding:30px;border-radius:12px;width:360px;max-width:92%;text-align:center;color:var(--text);}
+.pw-card label{display:block;font-size:16px;color:var(--text);margin-bottom:10px;font-weight:700;}
+.pw-card input{width:100%;padding:12px;border-radius:8px;border:1px solid #22445a;background:#06202b;color:#fff;font-size:18px;text-align:center;}
+.pw-hint{margin-top:8px;font-size:13px;color:var(--textdim);} 
 .pw-err{margin-top:8px;color:var(--danger);font-size:13px;}
-.pw-ok{display:none;}
+.pw-cta{margin-top:12px;}
+.pw-cta .btn{padding:10px 18px;border-radius:10px;font-size:16px;}
+@media (max-width:420px){
+  .pw-card{width:92%;padding:20px;}
+  .pw-card input{font-size:20px;padding:14px;}
+  .pw-cta .btn{display:block;width:100%;}
+}
 
 </style>
 </head>
 <body>
 
-<!-- パスワードオーバーレイ -->
+<!-- パスワードオーバーレイ（body直下に配置） -->
 <div id="pwOverlay" class="pw-overlay" aria-hidden="false">
   <div class="pw-card" role="dialog" aria-modal="true">
     <label for="pwInput">password</label>
-    <input id="pwInput" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="3" placeholder="例: 201">
+    <input id="pwInput" type="tel" inputmode="numeric" pattern="[0-9]*" maxlength="3" aria-label="パスワード（3桁の数字）">
     <div class="pw-hint">ヒント:支部番号</div>
     <div id="pwErr" class="pw-err" style="display:none;"></div>
-    <div style="margin-top:12px;">
-      <button id="pwBtn" class="btn">開く</button>
+    <div class="pw-cta">
+      <button type="button" id="pwBtn" class="btn">開く</button>
     </div>
   </div>
 </div>
@@ -177,8 +183,8 @@ table.results td.maker{color:#ffffff;font-weight:700;}
   </div>
 </div>
 
+<!-- パスワードチェックロジック（メインの大きなスクリプトより先に実行） -->
 <script>
-// パスワードチェックロジック
 (function(){
   const overlay = document.getElementById('pwOverlay');
   const input = document.getElementById('pwInput');
@@ -189,11 +195,9 @@ table.results td.maker{color:#ffffff;font-weight:700;}
   function hideErr(){ err.style.display='none'; err.textContent = ''; }
 
   function unlock(){
-    overlay.style.display = 'none';
-    overlay.setAttribute('aria-hidden','true');
+    try{ overlay.remove(); }catch(e){ overlay.style.display='none'; overlay.setAttribute('aria-hidden','true'); }
     try{ localStorage.setItem('ul_access_granted','1'); }catch(e){}
   }
-  function lock(){ overlay.style.display='flex'; overlay.setAttribute('aria-hidden','false'); }
 
   function check(v){
     const s = String(v).trim();
@@ -217,12 +221,16 @@ table.results td.maker{color:#ffffff;font-weight:700;}
   // 初期状態: localStorage に合格フラグがあれば通す
   try{
     if (localStorage.getItem('ul_access_granted') === '1'){
-      overlay.style.display='none'; overlay.setAttribute('aria-hidden','true');
+      try{ overlay.remove(); }catch(e){ overlay.style.display='none'; overlay.setAttribute('aria-hidden','true'); }
+    } else {
+      // フォーカスを入れてキーボードを起動（モバイル/PC）
+      setTimeout(()=>{ try{ input.focus(); }catch(e){} }, 200);
     }
   }catch(e){}
 })();
+</script>
 
-// 既存のスクリプト（データと検索機能）
+<script>
 const RECORDS=[{"no":"A-01","maker":"AMERICA'S CUP, INC.","sheet":"AMERICA'S CUP","model":"606M","ultype":"TYPEⅢ","size":"ADULT  SMALL","chest":"32-36","cg":"160.064/1915/0","branch":"大阪","date"[...] }]
 /* ====================== 全角→半角 正規化（英数字・記号） ====================== */
 function normalize(s) {
